@@ -4,6 +4,9 @@ import com.cyspace.backend.model.RecLocation;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,5 +29,35 @@ public class BusynessService {
         }
 
         return List.of();
+    }
+
+    public RecLocation getLibraryData() {
+        String libraryUrl = "https://www.lib.iastate.edu/libapi/libcaphours_json";
+
+        try {
+            String rawJson = restTemplate.getForObject(libraryUrl, String.class);
+
+            ObjectMapper mapper = new ObjectMapper();
+
+            JsonNode root = mapper.readTree(rawJson);
+
+            JsonNode densityNode = root.path("locations").path("parks").path("density");
+
+            String name = densityNode.path("name").asText();
+            int currentCount = densityNode.path("current_count").asInt();
+            int capacity = densityNode.path("capacity").asInt();
+
+            RecLocation library = new RecLocation();
+            library.setFacilityName("Parks Library");
+            library.setLocationName(name);
+            library.setLastCount(currentCount);
+            library.setTotalCapacity(capacity);
+
+            return library;
+
+        } catch (Exception e) {
+            System.out.println("Something went wrong fetching the library data: " + e.getMessage());
+            return null;
+        }
     }
 }
