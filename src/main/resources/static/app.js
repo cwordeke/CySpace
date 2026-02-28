@@ -1,5 +1,11 @@
+// TEMP
+console.log("app.js loaded");
+
+let previousLocations = null;
+
 document.addEventListener("DOMContentLoaded", () => {
     fetchLocations();
+    setInterval(fetchLocations, 30000); // 300000 = 5min
 });
 
 async function fetchLocations() {
@@ -7,6 +13,14 @@ async function fetchLocations() {
         // Fetch data
         const response = await fetch('/api/locations');
         const locations = await response.json();
+
+        // Compare new data with old to check if update is necessary
+        if (previousLocations && JSON.stringify(locations) === JSON.stringify(previousLocations)) {
+            console.log("No changes detected. Skipping re-render");
+            return;
+        }
+        console.log("Data changed. Updating UI.")
+        previousLocations = locations;
 
         // Find the empty HTML div
         const container = document.getElementById('locations-container');
