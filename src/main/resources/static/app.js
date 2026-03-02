@@ -43,18 +43,18 @@ let currentView = "type";
 let selectedType = null;
 let selectedFacility = null;
 
-// crude type detection using keywords so "Lied" / "Beyer" still map to Gym
+// Location type detector
 function detectType(facilityName = "") {
     const name = facilityName.toLowerCase();
     const gymKeywords = ['gym', 'rec', 'recreation', 'fieldhouse', 'arena', 'fitness', 'beyer', 'lied', 'recreation center', 'rec center', 'recctr'];
-    const libraryKeywords = ['lib', 'library', 'esports', 'media', 'study'];
+    const libraryKeywords = ['lib', 'library', 'media', 'study'];
 
     if (gymKeywords.some(k => name.includes(k))) return 'Gym';
     if (libraryKeywords.some(k => name.includes(k))) return 'Library';
     return 'Other';
 }
 
-// LEVEL 1 — show types present in the data
+// LEVEL 1: show types present in the data
 function renderTypeView(locations) {
     currentView = "type";
     selectedType = null;
@@ -62,6 +62,7 @@ function renderTypeView(locations) {
 
     const container = document.getElementById("view-container");
     container.innerHTML = "";
+    animateContainer();
 
     // figure out which types are present
     const present = new Set();
@@ -82,18 +83,19 @@ function renderTypeView(locations) {
     });
 }
 
-// LEVEL 2 — show distinct facilities for the chosen type (State, Lied, Beyer, etc.)
+// LEVEL 2: show distinct facilities for the chosen type
 function renderFacilityView(type, locations) {
     currentView = "facility";
     selectedType = type;
 
     const container = document.getElementById("view-container");
     container.innerHTML = "";
+    animateContainer();
 
-    // filter by type using detectType
+    // Filter by type using detectType
     const filtered = locations.filter(l => detectType(l.FacilityName) === type);
 
-    // unique facility names
+    // Facility names
     const facilities = [...new Set(filtered.map(l => l.FacilityName))];
 
     facilities.forEach(facility => {
@@ -111,13 +113,14 @@ function renderFacilityView(type, locations) {
     addBackButton(() => renderTypeView(locations));
 }
 
-// LEVEL 3 — show rooms for a facility (Court 3, Freeweight area, etc.)
+// LEVEL 3: show rooms for a facility
 function renderRoomView(facility, locations) {
     currentView = "room";
     selectedFacility = facility;
 
     const container = document.getElementById("view-container");
     container.innerHTML = "";
+    animateContainer();
 
     const rooms = locations.filter(l => l.FacilityName === facility);
 
@@ -142,7 +145,7 @@ function renderRoomView(facility, locations) {
     addBackButton(() => renderFacilityView(selectedType, locations));
 }
 
-// safe DOM-based back button (no string injection)
+// DOM-based back button
 function addBackButton(callback) {
     const container = document.getElementById("view-container");
     // remove old back button if present
@@ -160,4 +163,12 @@ function addBackButton(callback) {
 
     backRow.appendChild(btn);
     container.prepend(backRow);
+}
+
+// Smooth transitions thru views
+function animateContainer() {
+    const container = document.getElementById("view-container");
+    container.style.animation = 'none';
+    void container.offsetWidth;
+    container.style.animation = 'fadeSlideIn 0.4s cubic-bezier(.4,0,.2,1)';
 }
